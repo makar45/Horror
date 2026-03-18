@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; text-align: center; }
+        /* Экран игры */
+        #game-screen { width: 100vw; height: 70vh; position: relative; border-bottom: 2px solid #333; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        /* Объекты */
+        #tv { width: 150px; height: 100px; background: #222; border: 5px solid #444; display: none; }
+        #window { width: 100px; height: 150px; background: #001; border: 5px solid #444; display: none; position: relative; }
+        #monster { width: 40px; height: 40px; background: red; border-radius: 50%; position: absolute; top: 20%; left: 30%; display: none; box-shadow: 0 0 20px red; }
+        #closet-view { width: 100%; height: 100%; background: #050505; display: none; color: #222; align-items: center; justify-content: center; font-size: 12px; }
+
+        /* Помехи ТВ */
+        .glitch { background: repeating-linear-gradient(0deg, #fff, #000 2px) !important; }
+
+        /* Кнопки */
+        .controls { height: 30vh; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #111; }
+        button { background: #222; color: #f00; border: 2px solid #444; border-radius: 10px; font-size: 18px; font-weight: bold; }
+        button:active { background: #400; }
+        #status { position: absolute; top: 10px; width: 100%; color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="status">ВРЕМЯ: 12:00 AM</div>
+
+<div id="game-screen">
+    <div id="tv"></div>
+    <div id="window"><div id="monster"></div></div>
+    <div id="closet-view">ТЫ В ШКАФУ. ТУТ ТЕМНО.</div>
+</div>
+
+<div class="controls">
+    <button onclick="look('tv')">СМОТРЕТЬ НА ТВ</button>
+    <button onclick="look('window')">СМОТРЕТЬ В ОКНО</button>
+    <button onclick="action('fix')">ВЫКЛ ТВ</button>
+    <button onclick="action('hide')">ШКАФ</button>
+</div>
+
+<script>
+    let view = 'none'; // что сейчас видим
+    let isHidden = false;
+    let tvBad = false;
+    let winBad = false;
+    let time = 0;
+
+    // Функция переключения взгляда
+    function look(where) {
+        if (isHidden) return;
+        view = where;
+        document.getElementById('tv').style.display = (where === 'tv') ? 'block' : 'none';
+        document.getElementById('window').style.display = (where === 'window') ? 'block' : 'none';
+    }
+
+    // Кнопки действий
+    function action(type) {
+        if (type === 'hide') {
+            isHidden = !isHidden;
+            document.getElementById('closet-view').style.display = isHidden ? 'flex' : 'none';
+            if (isHidden) {
+                document.getElementById('tv').style.display = 'none';
+                document.getElementById('window').style.display = 'none';
+            } else {
+                look(view);
+            }
+        }
+        if (type === 'fix' && view === 'tv' && !isHidden) {
+            tvBad = false;
+            document.getElementById('tv').classList.remove('glitch');
+        }
+    }
+
+    // Логика монстров
+    setInterval(() => {
+        // ТВ ломается сам
+        if (Math.random() > 0.8 && !tvBad) {
+            tvBad = true;
+            document.getElementById('tv').classList.add('glitch');
+        }
+        // Монстр в окне
+        if (Math.random() > 0.9 && !winBad) {
+            winBad = true;
+            document.getElementById('monster').style.display = 'block';
+        }
+
+        // Проверка смерти
+        if (!isHidden) {
+            // Если телик мигает долго
+            if (tvBad && Math.random() > 0.7) die("МОНСТР ВЫЛЕЗ ИЗ ТВ");
+            // Если ты смотришь в окно, а там монстр
+            if (winBad && view === 'window' && Math.random() > 0.5) die("ТЫ УВИДЕЛ ЕГО В ОКНЕ...");
+        } else {
+            // В шкафу ты в безопасности, монстр может уйти
+            if (Math.random() > 0.5) {
+                winBad = false;
+                document.getElementById('monster').style.display = 'none';
+            }
+        }
+    }, 2000);
+
+    function die(msg) {
+        alert("GAME OVER: " + msg);
+        location.reload();
+    }
+</script>
+</body>
+</html>
